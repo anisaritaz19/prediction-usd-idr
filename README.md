@@ -1,4 +1,4 @@
-# ForexAI — USD/IDR Prediction Engine
+# DOLAR PREDICTION — USD/IDR Prediction Engine
 
 Platform machine learning komparatif untuk prediksi nilai tukar USD/IDR menggunakan 5 algoritma berbeda.
 
