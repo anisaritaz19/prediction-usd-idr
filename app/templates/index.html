@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}DOLAR PREDICTION— USD/IDR Prediction Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Hero ── */
+.hero {
+  padding: 5rem 0 3.5rem;
+  position: relative;
+}
+.hero-glow {
+  position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 400px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(99,102,241,.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: var(--mono); font-size: .7rem; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--accent2); margin-bottom: 1.5rem;
+  background: rgba(99,102,241,.08); border: 1px solid rgba(99,102,241,.2);
+  padding: .35rem .9rem; border-radius: 20px;
+}
+.hero h1 {
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 800; line-height: 1.05; letter-spacing: -.04em;
+  max-width: 700px;
+}
+.hero h1 .grad {
+  background: linear-gradient(135deg, #fff 20%, var(--accent2) 60%, var(--accent) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-sub {
+  margin-top: 1.25rem; max-width: 520px;
+  color: var(--muted); font-size: 1rem; line-height: 1.75;
+}
+.hero-actions {
+  margin-top: 2.25rem; display: flex; gap: 1rem; flex-wrap: wrap;
+}
+.hero-scroll {
+  margin-top: 1.5rem; display: flex; align-items: center; gap: .5rem;
+  font-size: .75rem; color: var(--muted2); font-family: var(--mono);
+}
+.hero-scroll svg { animation: bounce 2s infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
+
+/* ── Stat cards ── */
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem;
+  position: relative; overflow: hidden;
+  transition: border-color .2s, transform .2s;
+}
+.stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.stat-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+.stat-label { font-size: .65rem; font-weight: 700; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: .75rem; }
+.stat-value { font-family: var(--mono); font-size: 1.9rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--text), var(--accent3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.stat-sub { font-size: .75rem; color: var(--muted2); margin-top: .3rem; font-family: var(--mono); }
+
+/* ── Algo cards ── */
+.algo-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem;
+  transition: border-color .25s, transform .25s, box-shadow .25s;
+  cursor: default; display: flex; flex-direction: column; gap: .75rem;
+}
+.algo-card:hover {
+  border-color: rgba(99,102,241,.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(99,102,241,.12);
+}
+.algo-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.2);
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+.algo-name { font-weight: 700; font-size: .92rem; }
+.algo-desc { color: var(--muted); font-size: .8rem; line-height: 1.6; }
+
+/* ── CTA banner ── */
+.cta-banner {
+  background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(99,102,241,.04));
+  border: 1px solid rgba(99,102,241,.25);
+  border-radius: var(--radius); padding: 2.5rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap;
+  position: relative; overflow: hidden;
+}
+.cta-banner::before {
+  content: ''; position: absolute; right: -60px; top: -60px;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,102,241,.15), transparent 70%);
+}
+
+.section-title {
+  font-size: .7rem; font-weight: 700; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--accent2);
+  margin-bottom: 1.5rem; font-family: var(--mono);
+  display: flex; align-items: center; gap: .75rem;
+}
+.section-title::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <span class="hero-eyebrow">🎓 UTS Kecerdasan Buatan · 2025</span>
+  <h1>Prediksi Nilai Tukar<br><span class="grad">USD / IDR</span><br>dengan AI</h1>
+  <p class="hero-sub">
+    Platform machine learning komparatif yang menggunakan 5 algoritma berbeda
+    untuk memprediksi kurs Rupiah terhadap Dolar Amerika Serikat.
+  </p>
+  <div class="hero-actions">
+    <a href="/predict" class="btn btn-primary">⚡ Mulai Prediksi</a>
+    <a href="/compare" class="btn btn-outline">📊 Komparasi Model</a>
+  </div>
+  <div class="hero-scroll">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 5v14M5 12l7 7 7-7"/>
+    </svg>
+    Scroll untuk melihat detail dataset
+  </div>
+</section>
+
+<!-- Dataset stats -->
+{% if dataset %}
+<div class="mt-4">
+  <p class="section-title">Ringkasan Dataset</p>
+  <div class="grid-4">
+    <div class="stat-card">
+      <div class="stat-label">Total Observasi</div>
+      <div class="stat-value">{{ "{:,}".format(dataset.rows) }}</div>
+      <div class="stat-sub">hari perdagangan</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Periode Data</div>
+      <div class="stat-value" style="font-size:1.1rem;margin-top:.4rem">{{ dataset.start[:4] }}–{{ dataset.end[:4] }}</div>
+      <div class="stat-sub">{{ dataset.start }} s/d {{ dataset.end }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Rata-rata Kurs</div>
+      <div class="stat-value">{{ "{:,.0f}".format(dataset.avg_rate) }}</div>
+      <div class="stat-sub">IDR per 1 USD</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Range Historis</div>
+      <div class="stat-value" style="font-size:1.1rem;margin-top:.4rem">{{ "{:,.0f}".format(dataset.min_rate) }}</div>
+      <div class="stat-sub">s/d {{ "{:,.0f}".format(dataset.max_rate) }} IDR</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Algo cards -->
+<div class="mt-4">
+  <p class="section-title">5 Algoritma Machine Learning</p>
+  <div class="grid-3" style="gap:1rem">
+    <div class="algo-card">
+      <div class="algo-icon">📈</div>
+      <div class="algo-name">Linear Regression</div>
+      <div class="algo-desc">Baseline statistik klasik. Memodelkan hubungan linier antara fitur waktu & nilai tukar historis.</div>
+      <span class="badge badge-indigo">Baseline</span>
+    </div>
+    <div class="algo-card">
+      <div class="algo-icon">🧠</div>
+      <div class="algo-name">Artificial Neural Network</div>
+      <div class="algo-desc">Jaringan deep learning 3 hidden layer dengan dropout regularization. Menangkap pola non-linier.</div>
+      <span class="badge badge-sky">Deep Learning</span>
+    </div>
+    <div class="algo-card" style="border-color:rgba(99,102,241,.35)">
+      <div class="algo-icon" style="background:rgba(99,102,241,.2)">🔄</div>
+      <div class="algo-name">LSTM (Recurrent NN)</div>
+      <div class="algo-desc">Arsitektur long short-term memory. Memori jangka panjang untuk menangkap dependensi sekuensial.</div>
+      <span class="badge badge-green">⭐ Best Model</span>
+    </div>
+    <div class="algo-card">
+      <div class="algo-icon">🎯</div>
+      <div class="algo-name">K-Means Clustering</div>
+      <div class="algo-desc">Identifikasi rezim pasar secara unsupervised: stabil, volatile, tren naik, atau tren turun.</div>
+      <span class="badge badge-amber">Clustering</span>
+    </div>
+    <div class="algo-card">
+      <div class="algo-icon">⚙️</div>
+      <div class="algo-name">Backpropagation Manual</div>
+      <div class="algo-desc">Neural network dari scratch tanpa framework. Implementasi langsung algoritma gradient descent.</div>
+      <span class="badge badge-rose">Custom NN</span>
+    </div>
+    <div class="algo-card" style="border-style:dashed; justify-content:center; align-items:center; min-height:180px; text-align:center">
+      <div style="color:var(--muted); font-size:.85rem; margin-bottom:1rem">Bandingkan semua<br>model sekaligus</div>
+      <a href="/compare" class="btn btn-outline" style="font-size:.8rem">Lihat Komparasi →</a>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="mt-4">
+  <div class="cta-banner">
+    <div>
+      <div style="font-weight:800;font-size:1.3rem;letter-spacing:-.02em">Siap melakukan prediksi?</div>
+      <p style="color:var(--muted);margin-top:.4rem;font-size:.9rem">
+        Masukkan tanggal apa pun — historis maupun masa depan — dan dapatkan prediksi dari 5 model sekaligus.
+      </p>
+    </div>
+    <a href="/predict" class="btn btn-primary" style="white-space:nowrap;flex-shrink:0">⚡ Prediksi Sekarang</a>
+  </div>
+</div>
+{% endblock %}

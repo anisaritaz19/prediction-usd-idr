@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Komparasi Model — DOLAR PREDICTION{% endblock %}
+
+{% block extra_head %}
+<style>
+.model-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.75rem;
+  transition: border-color .2s, transform .2s;
+  position: relative; overflow: hidden;
+}
+.model-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.model-card.best { border-color: rgba(99,102,241,.4); }
+.model-card.best::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+}
+.model-icon { font-size: 2rem; margin-bottom: .75rem; }
+.model-name { font-weight: 800; font-size: 1rem; letter-spacing: -.01em; }
+.model-r2 {
+  font-family: var(--mono); font-size: 2.5rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--text), var(--accent3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-top: .5rem; line-height: 1;
+}
+.model-card.best .model-r2 {
+  background: linear-gradient(135deg, #fff, var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.model-r2-label { font-size: .65rem; color: var(--muted); font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.model-mae { font-family: var(--mono); font-size: .82rem; color: var(--muted); margin-top: .5rem; }
+
+/* Bar chart */
+.bar-wrap { margin-top: .75rem; }
+.bar-label { font-size: .65rem; color: var(--muted2); font-family: var(--mono); margin-bottom: .25rem; text-transform: uppercase; letter-spacing: .08em; }
+.bar-bg { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+.bar-fill.indigo  { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.bar-fill.emerald { background: linear-gradient(90deg, var(--emerald), #34d399); }
+.bar-fill.sky     { background: linear-gradient(90deg, var(--sky), #7dd3fc); }
+.bar-fill.rose    { background: linear-gradient(90deg, var(--rose), #fb7185); }
+.bar-fill.amber   { background: linear-gradient(90deg, var(--amber), #fcd34d); }
+
+/* Full table */
+.metric-row-best td { color: var(--accent2); font-weight: 700; }
+.rank-badge {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 800; font-family: var(--mono);
+}
+.rank-1 { background: linear-gradient(135deg, #f59e0b, #fcd34d); color: #78350f; }
+.rank-2 { background: rgba(148,163,184,.15); color: #94a3b8; }
+.rank-3 { background: rgba(180,83,9,.15); color: #c2410c; }
+.rank-4, .rank-5 { background: var(--border); color: var(--muted); }
+
+/* KMeans detail */
+.kmeans-stat {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 1.25rem 1.5rem;
+}
+.kmeans-val { font-family: var(--mono); font-size: 1.8rem; font-weight: 700; color: var(--accent2); margin-top: .3rem; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.a1{animation:fadeUp .35s ease both} .a2{animation:fadeUp .35s .06s ease both}
+.a3{animation:fadeUp .35s .12s ease both} .a4{animation:fadeUp .35s .18s ease both}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="eyebrow">Model Evaluation</div>
+  <h1>Komparasi Model ML</h1>
+  <p>Perbandingan performa 5 algoritma machine learning berdasarkan metrik evaluasi pada test set USD/IDR.</p>
+</div>
+
+{% if not metrics %}
+<div class="card" style="text-align:center;padding:4rem 2rem">
+  <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+  <div style="font-weight:700;font-size:1.1rem">Metrik belum tersedia</div>
+  <p class="text-muted mt-1">Jalankan <code style="color:var(--accent2);background:var(--card2);padding:.2rem .5rem;border-radius:4px">python train_models.py</code> terlebih dahulu.</p>
+</div>
+{% else %}
+
+<!-- Summary cards -->
+<div class="grid-3 a1" style="gap:1rem">
+  {% if metrics.linear_regression %}
+  <div class="model-card">
+    <div class="model-icon">📈</div>
+    <div class="model-name">Linear Regression</div>
+    <div class="model-r2">{{ "%.4f"|format(metrics.linear_regression.test_r2) }}</div>
+    <div class="model-r2-label">R² Score</div>
+    <div class="model-mae">MAE: {{ "%.2f"|format(metrics.linear_regression.test_mae) }} IDR</div>
+    <div class="bar-wrap">
+      <div class="bar-label">R² relatif</div>
+      <div class="bar-bg"><div class="bar-fill indigo" style="width:{{ [metrics.linear_regression.test_r2*100,100]|min }}%"></div></div>
+    </div>
+    <div class="mt-2"><span class="badge badge-indigo">Baseline</span></div>
+  </div>
+  {% endif %}
+
+  {% if metrics.ann %}
+  <div class="model-card a2">
+    <div class="model-icon">🧠</div>
+    <div class="model-name">ANN</div>
+    <div class="model-r2">{{ "%.4f"|format(metrics.ann.test_r2) }}</div>
+    <div class="model-r2-label">R² Score</div>
+    <div class="model-mae">MAE: {{ "%.2f"|format(metrics.ann.test_mae) }} IDR</div>
+    <div class="bar-wrap">
+      <div class="bar-label">R² relatif</div>
+      <div class="bar-bg"><div class="bar-fill sky" style="width:{{ [metrics.ann.test_r2*100,100]|min }}%"></div></div>
+    </div>
+    <div class="mt-2"><span class="badge badge-sky">Deep Learning</span></div>
+  </div>
+  {% endif %}
+
+  {% if metrics.lstm %}
+  <div class="model-card best a3">
+    <div class="model-icon">🔄</div>
+    <div class="model-name">LSTM (RNN)</div>
+    <div class="model-r2">{{ "%.4f"|format(metrics.lstm.test_r2) }}</div>
+    <div class="model-r2-label">R² Score — Best Model</div>
+    <div class="model-mae">MAE: {{ "%.2f"|format(metrics.lstm.test_mae) }} IDR</div>
+    <div class="bar-wrap">
+      <div class="bar-label">R² relatif</div>
+      <div class="bar-bg"><div class="bar-fill emerald" style="width:{{ [metrics.lstm.test_r2*100,100]|min }}%"></div></div>
+    </div>
+    <div class="mt-2"><span class="badge badge-green">⭐ Terbaik</span></div>
+  </div>
+  {% endif %}
+
+  {% if metrics.backpropagation %}
+  <div class="model-card a2">
+    <div class="model-icon">⚙️</div>
+    <div class="model-name">Backpropagation</div>
+    <div class="model-r2">{{ "%.4f"|format(metrics.backpropagation.test_r2) }}</div>
+    <div class="model-r2-label">R² Score</div>
+    <div class="model-mae">MAE: {{ "%.2f"|format(metrics.backpropagation.test_mae) }} IDR</div>
+    <div class="bar-wrap">
+      <div class="bar-label">R² relatif</div>
+      <div class="bar-bg"><div class="bar-fill rose" style="width:{{ [metrics.backpropagation.test_r2*100,100]|min }}%"></div></div>
+    </div>
+    <div class="mt-2"><span class="badge badge-rose">Custom NN</span></div>
+  </div>
+  {% endif %}
+
+  {% if metrics.kmeans %}
+  <div class="model-card a3">
+    <div class="model-icon">🎯</div>
+    <div class="model-name">K-Means Clustering</div>
+    <div class="model-r2">{{ "%.4f"|format(metrics.kmeans.silhouette_score) }}</div>
+    <div class="model-r2-label">Silhouette Score</div>
+    <div class="model-mae">K optimal: {{ metrics.kmeans.optimal_k }}</div>
+    <div class="bar-wrap">
+      <div class="bar-label">Cohesion score</div>
+      <div class="bar-bg"><div class="bar-fill amber" style="width:{{ [metrics.kmeans.silhouette_score*100,100]|min }}%"></div></div>
+    </div>
+    <div class="mt-2"><span class="badge badge-amber">Clustering</span></div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Full metrics table -->
+<div class="card mt-4 a2">
+  <div class="card-label">Tabel Metrik Lengkap — Regression Models</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Rank</th><th>Model</th><th>MAE ↓</th><th>RMSE ↓</th><th>R² ↑</th><th>Label</th></tr>
+      </thead>
+      <tbody>
+        {% set models = [] %}
+        {% if metrics.lstm %}{% set _ = models.append(('LSTM (RNN)', '🔄', metrics.lstm, 'badge-green', 'Best Model')) %}{% endif %}
+        {% if metrics.ann %}{% set _ = models.append(('ANN', '🧠', metrics.ann, 'badge-sky', 'Deep Learning')) %}{% endif %}
+        {% if metrics.backpropagation %}{% set _ = models.append(('Backpropagation', '⚙️', metrics.backpropagation, 'badge-rose', 'Custom NN')) %}{% endif %}
+        {% if metrics.linear_regression %}{% set _ = models.append(('Linear Regression', '📈', metrics.linear_regression, 'badge-indigo', 'Baseline')) %}{% endif %}
+        {% for name, icon, m, badge_cls, badge_lbl in models %}
+        <tr {% if loop.first %}class="metric-row-best"{% endif %}>
+          <td><span class="rank-badge rank-{{ loop.index }}">{{ loop.index }}</span></td>
+          <td>{{ icon }} {{ name }}</td>
+          <td class="text-mono">{{ "%.2f"|format(m.test_mae) }}</td>
+          <td class="text-mono">{{ "%.2f"|format(m.test_rmse) }}</td>
+          <td class="text-mono">{{ "%.4f"|format(m.test_r2) }}</td>
+          <td><span class="badge {{ badge_cls }}">{{ badge_lbl }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="text-muted mt-2" style="font-size:.72rem;font-family:var(--mono)">
+    ↓ semakin kecil = semakin baik &nbsp;|&nbsp; ↑ semakin besar = semakin baik &nbsp;|&nbsp; MAE & RMSE dalam satuan IDR
+  </p>
+</div>
+
+<!-- K-Means detail -->
+{% if metrics.kmeans %}
+<div class="card mt-3 a3">
+  <div class="card-label">Detail K-Means Clustering</div>
+  <div class="grid-3" style="gap:1rem">
+    <div class="kmeans-stat">
+      <div class="card-label" style="margin-bottom:.5rem">Optimal K</div>
+      <div class="kmeans-val">{{ metrics.kmeans.optimal_k }}</div>
+      <p class="text-muted mt-1" style="font-size:.75rem">cluster optimal berdasarkan elbow method</p>
+    </div>
+    <div class="kmeans-stat">
+      <div class="card-label" style="margin-bottom:.5rem">Silhouette Score</div>
+      <div class="kmeans-val">{{ "%.3f"|format(metrics.kmeans.silhouette_score) }}</div>
+      <p class="text-muted mt-1" style="font-size:.75rem">cohesion & separation antar cluster</p>
+    </div>
+    <div class="kmeans-stat">
+      <div class="card-label" style="margin-bottom:.5rem">Inertia (WCSS)</div>
+      <div class="kmeans-val" style="font-size:1.3rem">{{ "{:,.0f}".format(metrics.kmeans.inertia) }}</div>
+      <p class="text-muted mt-1" style="font-size:.75rem">within-cluster sum of squares</p>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div style="font-size:.82rem;color:var(--muted);line-height:1.7">
+    <strong style="color:var(--text)">Interpretasi Cluster:</strong>
+    K-Means mengelompokkan kondisi pasar menjadi {{ metrics.kmeans.optimal_k }} rezim berbeda berdasarkan pola nilai tukar historis.
+    Setiap cluster merepresentasikan karakteristik pasar yang unik — dari kondisi stabil hingga volatile.
+    Silhouette Score {{ "%.3f"|format(metrics.kmeans.silhouette_score) }} menunjukkan
+    {% if metrics.kmeans.silhouette_score > 0.5 %}pemisahan cluster yang baik{% elif metrics.kmeans.silhouette_score > 0.25 %}pemisahan cluster yang cukup{% else %}pemisahan cluster yang lemah{% endif %}.
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

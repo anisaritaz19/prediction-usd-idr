@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% block title %}Prediksi — DOLAR/RUPIAH{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Date picker form ── */
+.date-input-wrap {
+  display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;
+}
+.field-group { display: flex; flex-direction: column; gap: .5rem; flex: 1; min-width: 120px; }
+.field-label {
+  font-size: .65rem; font-weight: 700; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--muted); font-family: var(--mono);
+}
+.field-input {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: .7rem 1rem;
+  color: var(--text); font-family: var(--mono); font-size: .95rem;
+  transition: border-color .2s, box-shadow .2s; width: 100%;
+}
+.field-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+.field-input::-webkit-inner-spin-button { display: none; }
+
+/* ── Result cards ── */
+.result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 1rem; }
+.result-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem;
+  text-align: center; position: relative; overflow: hidden;
+  transition: border-color .25s, transform .25s, box-shadow .25s;
+}
+.result-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.result-card.best {
+  border-color: rgba(99,102,241,.45);
+  background: linear-gradient(135deg, rgba(99,102,241,.07), var(--card));
+}
+.result-card .r-label {
+  font-size: .65rem; font-weight: 700; letter-spacing: .15em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: .75rem; font-family: var(--mono);
+}
+.result-card .r-value {
+  font-family: var(--mono); font-size: 2.1rem; font-weight: 700; line-height: 1;
+  background: linear-gradient(135deg, var(--text), var(--accent3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.result-card.best .r-value {
+  background: linear-gradient(135deg, #fff, var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.result-card .r-unit { font-size: .72rem; color: var(--muted); margin-top: .3rem; font-family: var(--mono); }
+.result-card .r-badge { margin-top: 1rem; }
+
+/* ── Context info ── */
+.context-pill {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .35rem .9rem; border-radius: 20px; font-size: .75rem; font-weight: 600;
+  font-family: var(--mono);
+}
+.context-pill.future  { background: rgba(245,158,11,.1); color: var(--amber); border: 1px solid rgba(245,158,11,.2); }
+.context-pill.history { background: rgba(16,185,129,.1); color: var(--emerald); border: 1px solid rgba(16,185,129,.2); }
+
+/* ── Summary bar ── */
+.summary-bar {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 1rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem;
+  font-family: var(--mono); font-size: .82rem;
+}
+.summary-item { display: flex; flex-direction: column; gap: .2rem; }
+.summary-item .s-key { font-size: .62rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.summary-item .s-val { color: var(--text); font-weight: 600; }
+
+/* ── Cluster card ── */
+.cluster-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem;
+}
+.cluster-pill {
+  display: inline-flex; align-items: center; gap: .6rem;
+  padding: .5rem 1.2rem; border-radius: 30px; font-weight: 700; font-size: .88rem;
+}
+.cluster-0 { background: rgba(16,185,129,.12); color: var(--emerald); border: 1px solid rgba(16,185,129,.25); }
+.cluster-1 { background: rgba(99,102,241,.12); color: var(--accent2); border: 1px solid rgba(99,102,241,.25); }
+.cluster-2 { background: rgba(245,158,11,.12); color: var(--amber);   border: 1px solid rgba(245,158,11,.25); }
+.cluster-3 { background: rgba(244,63,94,.12);  color: var(--rose);    border: 1px solid rgba(244,63,94,.25); }
+
+/* ── Metrics table ── */
+.metric-best td { color: var(--accent2); }
+.metric-best .model-name { font-weight: 800; }
+
+/* ── Animate in ── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.anim-1 { animation: fadeUp .4s ease both; }
+.anim-2 { animation: fadeUp .4s .07s ease both; }
+.anim-3 { animation: fadeUp .4s .14s ease both; }
+.anim-4 { animation: fadeUp .4s .21s ease both; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="eyebrow">Machine Learning Engine</div>
+  <h1>Prediksi Kurs USD/IDR</h1>
+  <p>Masukkan tanggal apa pun — historis maupun masa depan — untuk mendapatkan prediksi dari 5 model ML sekaligus.</p>
+</div>
+
+{% if error %}
+<div class="alert alert-error anim-1">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <div><strong>Error:</strong> {{ error }}</div>
+</div>
+{% endif %}
+
+<!-- ── Input Form ── -->
+<div class="card anim-1">
+  <div class="card-label">Input Tanggal Prediksi</div>
+  <form method="POST" action="/predict">
+    <div class="date-input-wrap">
+      <div class="field-group" style="max-width:120px">
+        <label class="field-label" for="day">Tanggal</label>
+        <input class="field-input" type="number" id="day" name="day"
+               value="{{ input_features.day if input_features else '' }}"
+               placeholder="DD" min="1" max="31" required>
+      </div>
+      <div class="field-group" style="max-width:120px">
+        <label class="field-label" for="month">Bulan</label>
+        <input class="field-input" type="number" id="month" name="month"
+               value="{{ input_features.month if input_features else '' }}"
+               placeholder="MM" min="1" max="12" required>
+      </div>
+      <div class="field-group" style="max-width:140px">
+        <label class="field-label" for="year">Tahun</label>
+        <input class="field-input" type="number" id="year" name="year"
+               value="{{ input_features.year if input_features else '' }}"
+               placeholder="YYYY" min="2001" max="2035" required>
+      </div>
+      <div class="field-group" style="max-width:200px">
+        <label class="field-label">&nbsp;</label>
+        <button type="submit" class="btn btn-primary" style="height:42px">
+          ⚡ Prediksi Sekarang
+        </button>
+      </div>
+      <div class="field-group" style="max-width:120px">
+        <label class="field-label">&nbsp;</label>
+        <button type="reset" class="btn btn-ghost" style="height:42px">↺ Reset</button>
+      </div>
+    </div>
+    <p class="text-muted mt-2" style="font-size:.75rem;font-family:var(--mono)">
+      💡 Mendukung tanggal historis (2001–2025) dan prediksi masa depan (2026+)
+    </p>
+  </form>
+</div>
+
+<!-- ── Results ── -->
+{% if predictions %}
+<div class="mt-4">
+
+  <!-- Header info -->
+  <div class="summary-bar anim-1">
+    <div class="summary-item">
+      <span class="s-key">Tanggal Diprediksi</span>
+      <span class="s-val">{{ date_str }}{% if weekday %} ({{ weekday }}){% endif %}</span>
+    </div>
+    <div class="summary-item">
+      <span class="s-key">Kurs Referensi Terakhir</span>
+      <span class="s-val">{{ "{:,.2f}".format(latest_rate) }} IDR</span>
+    </div>
+    <div class="summary-item">
+      <span class="s-key">Tipe Prediksi</span>
+      <span class="s-val">
+        {% if is_future %}
+          <span class="context-pill future">🔮 Masa Depan</span>
+        {% else %}
+          <span class="context-pill history">📅 Historis</span>
+        {% endif %}
+      </span>
+    </div>
+    {% if is_future %}
+    <div style="color:var(--amber);font-size:.75rem;font-family:var(--mono);max-width:300px">
+      ⚠ Prediksi masa depan menggunakan data terbaru (Okt 2025) sebagai basis fitur.
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Prediction cards -->
+  <div class="result-grid mt-3">
+    {% if predictions.linear_regression is defined and predictions.linear_regression %}
+    <div class="result-card anim-1">
+      <div class="r-label">Linear Regression</div>
+      <div class="r-value">{{ "{:,.0f}".format(predictions.linear_regression) }}</div>
+      <div class="r-unit">IDR / USD</div>
+      <div class="r-badge"><span class="badge badge-indigo">Baseline</span></div>
+    </div>
+    {% endif %}
+
+    {% if predictions.ann is defined and predictions.ann %}
+    <div class="result-card anim-2">
+      <div class="r-label">Artificial Neural Net</div>
+      <div class="r-value">{{ "{:,.0f}".format(predictions.ann) }}</div>
+      <div class="r-unit">IDR / USD</div>
+      <div class="r-badge"><span class="badge badge-sky">Deep Learning</span></div>
+    </div>
+    {% endif %}
+
+    {% if predictions.lstm is defined and predictions.lstm %}
+    <div class="result-card best anim-3">
+      <div class="r-label">LSTM (Recurrent NN)</div>
+      <div class="r-value">{{ "{:,.0f}".format(predictions.lstm) }}</div>
+      <div class="r-unit">IDR / USD</div>
+      <div class="r-badge">
+        <span class="badge badge-green">⭐ Best Model</span>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if predictions.backpropagation is defined and predictions.backpropagation %}
+    <div class="result-card anim-4">
+      <div class="r-label">Backpropagation</div>
+      <div class="r-value">{{ "{:,.0f}".format(predictions.backpropagation) }}</div>
+      <div class="r-unit">IDR / USD</div>
+      <div class="r-badge"><span class="badge badge-rose">Custom NN</span></div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- K-Means cluster -->
+  {% if predictions.cluster is defined %}
+  {% set cluster_labels = ['Stabil Rendah','Tren Naik','Volatile','Ekstrem'] %}
+  {% set cluster_descs  = [
+    'Kondisi pasar relatif tenang dengan volatilitas rendah.',
+    'Indikasi tren penguatan atau pelemahan yang konsisten.',
+    'Pergerakan kurs tidak menentu dan berisiko tinggi.',
+    'Kondisi pasar ekstrem, di luar pola normal historis.'
+  ] %}
+  <div class="cluster-card mt-3 anim-2">
+    <div class="card-label">Identifikasi Rezim Pasar (K-Means)</div>
+    <span class="cluster-pill cluster-{{ predictions.cluster }}">
+      Cluster #{{ predictions.cluster }} —
+      {{ cluster_labels[predictions.cluster] if predictions.cluster < cluster_labels|length else 'Lainnya' }}
+    </span>
+    <p class="text-muted mt-2" style="font-size:.82rem;line-height:1.6">
+      {{ cluster_descs[predictions.cluster] if predictions.cluster < cluster_descs|length else '' }}
+      Rezim ini diidentifikasi berdasarkan pola historis nilai tukar menggunakan K-Means clustering.
+    </p>
+  </div>
+  {% endif %}
+
+  <!-- Model metrics -->
+  {% if metrics %}
+  <div class="card mt-3 anim-3">
+    <div class="card-label">Metrik Model (Test Set)</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th><th>MAE ↓</th><th>RMSE ↓</th><th>R² ↑</th><th>Tipe</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if metrics.linear_regression %}
+          <tr>
+            <td>📈 Linear Regression</td>
+            <td>{{ "%.2f"|format(metrics.linear_regression.test_mae) }}</td>
+            <td>{{ "%.2f"|format(metrics.linear_regression.test_rmse) }}</td>
+            <td>{{ "%.4f"|format(metrics.linear_regression.test_r2) }}</td>
+            <td><span class="badge badge-indigo">Baseline</span></td>
+          </tr>
+          {% endif %}
+          {% if metrics.ann %}
+          <tr>
+            <td>🧠 ANN</td>
+            <td>{{ "%.2f"|format(metrics.ann.test_mae) }}</td>
+            <td>{{ "%.2f"|format(metrics.ann.test_rmse) }}</td>
+            <td>{{ "%.4f"|format(metrics.ann.test_r2) }}</td>
+            <td><span class="badge badge-sky">Deep Learning</span></td>
+          </tr>
+          {% endif %}
+          {% if metrics.lstm %}
+          <tr class="metric-best">
+            <td class="model-name">🔄 LSTM ⭐</td>
+            <td>{{ "%.2f"|format(metrics.lstm.test_mae) }}</td>
+            <td>{{ "%.2f"|format(metrics.lstm.test_rmse) }}</td>
+            <td>{{ "%.4f"|format(metrics.lstm.test_r2) }}</td>
+            <td><span class="badge badge-green">Best</span></td>
+          </tr>
+          {% endif %}
+          {% if metrics.backpropagation %}
+          <tr>
+            <td>⚙️ Backpropagation</td>
+            <td>{{ "%.2f"|format(metrics.backpropagation.test_mae) }}</td>
+            <td>{{ "%.2f"|format(metrics.backpropagation.test_rmse) }}</td>
+            <td>{{ "%.4f"|format(metrics.backpropagation.test_r2) }}</td>
+            <td><span class="badge badge-rose">Custom</span></td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-muted mt-2" style="font-size:.72rem;font-family:var(--mono)">
+      ↓ lebih kecil = lebih baik &nbsp;|&nbsp; ↑ lebih besar = lebih baik &nbsp;|&nbsp; MAE & RMSE dalam IDR
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
+{% endblock %}
